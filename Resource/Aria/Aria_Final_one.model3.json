@@ -1,0 +1,18 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "Aria_Final_one.moc3",
+		"Textures": [
+			"Aria_Final_one.8192/texture_00.png"
+		],
+		"Physics": "Aria_Final_one.physics3.json",
+		"DisplayInfo": "Aria_Final_one.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": []
+		}
+	]
+}
