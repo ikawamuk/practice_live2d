@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
+	"rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -15,7 +16,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "../Core/*.ts"
+	"../public/CubismWebCore/*.ts"
   ],
   "exclude": [
     "node_modules",

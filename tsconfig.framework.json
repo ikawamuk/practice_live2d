@@ -1,0 +1,26 @@
+{
+  // === Framework を「完成品(.js + .d.ts)」にビルドするための専用設定 ===
+  // あなたのコード用の tsconfig.json とは別物。ここは Framework が通る"緩い"ルールにする。
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    "strict": false, // ← Framework は strictNullChecks オフ前提で書かれている（TS6はstrictが既定ONなので明示的に切る）
+
+    "declaration": true, // ← .d.ts を出力（これが型情報の受け渡しに使われる）
+    "sourceMap": true,
+    "outDir": "./CubismWebFramework/dist",
+    "rootDir": "./CubismWebFramework/src",
+
+    "skipLibCheck": true
+    // 注: strict / noUnusedLocals / erasableSyntaxOnly は入れない = Framework がそのまま通る
+  },
+  "include": [
+    "CubismWebFramework/src/**/*.ts",
+    "public/CubismWebCore/live2dcubismcore.d.ts"
+  ]
+}
+// execute with `npx tsc -p tsconfig.framework.json # this file's name`
