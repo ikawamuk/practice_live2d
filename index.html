@@ -1,13 +1,32 @@
 <!doctype html>
-<html lang="en">
+<html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>my-live2d</title>
+    <title>Live2D Aria</title>
+    <style>
+      html, body {
+        overflow: hidden;
+        margin: 0;
+      }
+        html {
+        overscroll-behavior-x: none;
+        touch-action: none;
+      }
+      body {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      body > canvas:only-child {
+        width: 100vw;
+        height: 100vh;
+      }
+    </style>
+      <!-- ① まず Core を先に読む（グローバル Live2DCubismCore を生やす／type=module を付けない普通のスクリプト） -->
+      <script src="/CubismWebCore/live2dcubismcore.min.js"></script>
+      <!-- ② その後で自分のコード。Core が読み終わってから実行される -->
+      <script type="module" src="/src/main.ts"></script>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
