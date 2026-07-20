@@ -1,7 +1,8 @@
 
 import { CubismFramework, Option } from '@framework/live2dcubismframework';
-import * as AliceDefine from './AliceDefine.ts';
-import { AlicePlatform } from './AlicePlatform.ts';
+import * as AliceDefine from './AliceDefine';
+import { AlicePlatform } from './AlicePlatform';
+import { AliceGraphicsContext } from './AliceGraphicsContext'
 
 export let singleton_instance: AliceApp | null = null;
 
@@ -18,6 +19,7 @@ export class AliceApp {
 
 	public initialize(): boolean {
 		this.initializeCubism();
+		this.initializeAliceGraphicsContext();
 		return (true);
 	}
 
@@ -27,9 +29,7 @@ export class AliceApp {
 				return ;
 			}
 			AlicePlatform.updateTime();
-
-			console.log(AlicePlatform.currentFrame); // for test
-			
+			this.graphicsContext_.update();
 			requestAnimationFrame(loop);
 		}
 		loop();
@@ -47,6 +47,7 @@ export class AliceApp {
 	*/
 	private constructor() {
 		this.cubismLogOption_ = new Option();
+		this.graphicsContext_ = new AliceGraphicsContext();
 	}
 
 	private initializeCubism(): void {
@@ -56,7 +57,12 @@ export class AliceApp {
 		CubismFramework.initialize();
 	}
 
+	private initializeAliceGraphicsContext(): void {
+		this.graphicsContext_.initialize();
+	}
+
 	private release(): void {
+		this.graphicsContext_.release();
 		CubismFramework.dispose();
 		CubismFramework.cleanUp();
 	}
@@ -65,5 +71,6 @@ export class AliceApp {
 		プロパティ
 	*/
 	private cubismLogOption_: Option;
+	private graphicsContext_: AliceGraphicsContext;
 }
 
