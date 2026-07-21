@@ -3,10 +3,11 @@ import { CubismMatrix44 } from '@framework/math/cubismmatrix44';
 import { CubismViewMatrix } from '@framework/math/cubismviewmatrix';
 
 import * as AliceDefine from './AliceDefine';
-import { TextureInfo } from './AliceTextureManager'
-import { AliceSprite } from './AliceSprite'
-import type { GLManager } from './AliceSprite'
+import { TextureInfo } from './AliceTextureManager';
+import { AliceSprite } from './AliceSprite';
 import { AlicePlatform } from './AlicePlatform';
+import { AliceSpriteRenderer } from './AliceSpriteRenderer';
+import type { GLManager } from './AliceSprite';
 
 class LogicalCanvas {
 	width: number;
@@ -45,6 +46,7 @@ export class AliceView {
 	public constructor() {
 		this.viewMatrix_ = new CubismViewMatrix();
 		this.deviceToScreen_ = new CubismMatrix44();
+		this.spriteRenderer_ = new AliceSpriteRenderer();
 		this.shader = null;
 		this.background_ = null;
 	}
@@ -57,7 +59,7 @@ export class AliceView {
 
 	public initializeSprite(
 		canvas: HTMLCanvasElement,
-		glManager: GLManager,
+		glManager_: GLManager,
 		textureLoader: TextureLoader,
 		shaderCreater: ShaderCreater,
 	): void {
@@ -79,7 +81,7 @@ export class AliceView {
 			const ratio = fheight / textureInfo.height;
 			const fwidth = textureInfo.width * ratio;
 			this.background_ = new AliceSprite(x, y, fwidth, fheight, textureInfo.id);
-			this.background_.setGLManager(glManager);
+			this.background_.setGLManager(glManager_);
 		}
 		textureLoader.createTextureFromPngFile(
 			resourcesPath + imageName,
@@ -90,12 +92,20 @@ export class AliceView {
 		}
 	}
 
-	public render(): void {
-		AlicePlatform.printMessage('rendering!!!');
+	public render(glManager_: GLManager, canvas: HTMLCanvasElement): void {
+		if (this.shader == null) {
+			AlicePlatform.printMessage('shader is not set');
+			return ;
+		}
+		glManager_.getGL().useProgram(this.shader);
+		if (this.background_) {
+			this.spriteRenderer_.render(this.background_, this.shader, glManager_.getGL(), canvas);
+		}
 	}
 
 	public release(): void {
 		if (this.background_ == null) {
+			AlicePlatform.printMessage('background is not set');
 			return ;
 		}
 		this.background_.release();
@@ -138,5 +148,6 @@ export class AliceView {
 	private viewMatrix_: CubismViewMatrix;
 	private deviceToScreen_: CubismMatrix44;
 	private shader: WebGLProgram | null;
+	private spriteRenderer_: AliceSpriteRenderer;
 	private background_: AliceSprite | null;
 }

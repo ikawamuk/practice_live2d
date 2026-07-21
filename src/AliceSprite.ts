@@ -30,6 +30,13 @@ export class AliceSprite {
 		this.glManager_ = glManager;
 	}
 
+	public getTexture(): WebGLTexture {
+		return (this.texture_);
+	}
+
+	public getRect(): Rect {
+		return (this.rect_);
+	}
 	private texture_: WebGLTexture;
 	private rect_: Rect; // 矩形
 	private glManager_: GLManager | null;

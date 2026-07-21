@@ -4,6 +4,7 @@ import { AliceView } from './AliceView';
 import { AliceShaderCreater } from './AliceShaderCreater';
 import { AliceGLManager } from './AliceGLManager';
 import { AliceTextureManager } from './AliceTextureManager';
+import { AlicePlatform } from './AlicePlatform';
 
 export class AliceGraphicsContext {
 
@@ -72,7 +73,10 @@ export class AliceGraphicsContext {
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		// 描画更新
-		this.view_.render();
+		if (this.canvas_ == null) {
+			throw new Error('canvas is not set');
+		}
+		this.view_.render(this.glManager_, this.canvas_);
 	}
 
 	public release(): void {
@@ -84,6 +88,7 @@ export class AliceGraphicsContext {
 
 	public onResize(): void {
 		if (this.canvas_ == null) {
+			AlicePlatform.printMessage('canvas is not set');
 			return ;
 		}
 		this.resizeCanvas();
@@ -98,6 +103,7 @@ export class AliceGraphicsContext {
 
 	public resizeCanvas(): void {
 		if (this.canvas_ == null) {
+			AlicePlatform.printMessage('canvas is not set');
 			return ;
 		}
 		this.canvas_.width = this.canvas_.clientWidth * window.devicePixelRatio;
