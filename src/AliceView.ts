@@ -6,7 +6,7 @@ import * as AliceDefine from './AliceDefine';
 import { TextureInfo } from './AliceTextureManager';
 import { AliceSprite } from './AliceSprite';
 import { AlicePlatform } from './AlicePlatform';
-import { AliceSpriteRenderer } from './AliceSpriteRenderer';
+import { AliceSpriteManager } from './AliceSpriteManager';
 import type { GLManager } from './AliceSprite';
 
 class LogicalCanvas {
@@ -46,7 +46,6 @@ export class AliceView {
 	public constructor() {
 		this.viewMatrix_ = new CubismViewMatrix();
 		this.deviceToScreen_ = new CubismMatrix44();
-		this.spriteRenderer_ = new AliceSpriteRenderer();
 		this.shader = null;
 		this.background_ = null;
 	}
@@ -80,7 +79,8 @@ export class AliceView {
 			const fheight = height * 0.95;
 			const ratio = fheight / textureInfo.height;
 			const fwidth = textureInfo.width * ratio;
-			this.background_ = new AliceSprite(x, y, fwidth, fheight, textureInfo.id);
+			const sprite = new AliceSprite(x, y, fwidth, fheight, textureInfo.id);
+			this.background_ = new AliceSpriteManager(sprite);
 			this.background_.setGLManager(glManager_);
 		}
 		textureLoader.createTextureFromPngFile(
@@ -99,7 +99,7 @@ export class AliceView {
 		}
 		glManager_.getGL().useProgram(this.shader);
 		if (this.background_) {
-			this.spriteRenderer_.render(this.background_, this.shader, glManager_.getGL(), canvas);
+			this.background_.render(this.shader, glManager_.getGL(), canvas);
 		}
 	}
 
@@ -148,6 +148,5 @@ export class AliceView {
 	private viewMatrix_: CubismViewMatrix;
 	private deviceToScreen_: CubismMatrix44;
 	private shader: WebGLProgram | null;
-	private spriteRenderer_: AliceSpriteRenderer;
-	private background_: AliceSprite | null;
+	private background_: AliceSpriteManager | null;
 }
