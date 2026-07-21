@@ -1,5 +1,7 @@
 
-export class AlliceGLManager {
+import type { GLManager } from './AliceSprite'
+
+export class AliceGLManager implements GLManager {
 	public constructor() {
 		this.gl_ = null;
 	}

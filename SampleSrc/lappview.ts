@@ -48,8 +48,8 @@ export class LAppView {
     const ratio: number = width / height;
     const left: number = -ratio;
     const right: number = ratio;
-    const bottom: number = LAppDefine.ViewLogicalLeft;
-    const top: number = LAppDefine.ViewLogicalRight;
+    const bottom: number = LAppDefine.ViewLogicalBottom;
+    const top: number = LAppDefine.ViewLogicalTop;
 
     this._viewMatrix.setScreenRect(left, right, bottom, top); // デバイスに対応する画面の範囲。 Xの左端、Xの右端、Yの下端、Yの上端
     this._viewMatrix.scale(LAppDefine.ViewScale, LAppDefine.ViewScale);
