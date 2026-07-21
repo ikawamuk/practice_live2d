@@ -24,4 +24,13 @@ export const ResourcesPath = '/Resources/';
 // モデルの後ろにある背景の画像ファイル
 export const BackImageName = 'Gemini_Generated_Image_Cyber.png';
 
+// モデル定義---------------------------------------------
+// モデルを配置したディレクトリ名の配列
+// ディレクトリ名とmodel3.jsonの名前を一致させておくこと
+export const ModelName = 'Aria';
+
+// デバッグ用ログの表示オプション
+export const DebugLogEnable = true;
+
+// Frameworkから出力するログのレベル設定
 export const CubismLogLevel: LogLevel =  LogLevel.LogLevel_Verbose;

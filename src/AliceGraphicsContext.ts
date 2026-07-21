@@ -5,6 +5,7 @@ import { AliceShaderCreater } from './AliceShaderCreater';
 import { AliceGLManager } from './AliceGLManager';
 import { AliceTextureManager } from './AliceTextureManager';
 import { AlicePlatform } from './AlicePlatform';
+import { AliceLive2DManager} from './AliceLive2DManager';
 
 export class AliceGraphicsContext {
 
@@ -16,6 +17,7 @@ export class AliceGraphicsContext {
 		this.glManager_ = new AliceGLManager();
 		this.textureManager_ = new AliceTextureManager();
 		this.shaderCreater_ = new AliceShaderCreater();
+		this.live2DManager_ = new AliceLive2DManager();
 		this.canvas_ = null;
 		this.frameBuffer_ = null;
 		this.resizeObserver_ = new ResizeObserver(
@@ -26,7 +28,7 @@ export class AliceGraphicsContext {
 	}
 
 	public initialize(): boolean {
-		this.canvas_ = this.makeNewCanvas();
+		this.canvas_ = this.makeCanvas();
 		if (!this.initializeGLContext(this.canvas_)) {
 			return (false);
 		}
@@ -45,6 +47,7 @@ export class AliceGraphicsContext {
 			this.shaderCreater_
 		);
 
+		this.live2DManager_.initialize();
 		this.resizeObserver_.observe(this.canvas_);
 		return (true);
 	}
@@ -76,11 +79,15 @@ export class AliceGraphicsContext {
 		if (this.canvas_ == null) {
 			throw new Error('canvas is not set');
 		}
-		this.view_.render(this.glManager_, this.canvas_);
+		this.view_.render(this.glManager_, this.canvas_, this.live2DManager_);
 	}
 
 	public release(): void {
-
+		if (this.canvas_) {
+			this.resizeObserver_.unobserve(this.canvas_);
+		}
+		this.resizeObserver_.disconnect();
+		this.live2DManager_.release();
 		this.view_.release();
 		this.textureManager_.release();
 		this.glManager_.release();
@@ -128,7 +135,7 @@ export class AliceGraphicsContext {
 	/*
 		privateメソッド
 	*/
-	private makeNewCanvas(): HTMLCanvasElement {
+	private makeCanvas(): HTMLCanvasElement {
 		const width: number = 100;
 		const height: number = 100;
 		const canvas = document.createElement('canvas');
@@ -182,6 +189,7 @@ export class AliceGraphicsContext {
 	private glManager_: AliceGLManager;
 	private textureManager_: AliceTextureManager;
 	private shaderCreater_: AliceShaderCreater;
+	private live2DManager_: AliceLive2DManager;
 	private canvas_: HTMLCanvasElement | null;
 	private frameBuffer_: WebGLFramebuffer | null;
 

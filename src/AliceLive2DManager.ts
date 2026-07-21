@@ -1,0 +1,65 @@
+
+import { CubismMatrix44 } from '@framework/math/cubismmatrix44';
+import { CubismWebGLOffscreenManager } from '@framework/rendering/cubismoffscreenmanager';
+
+import type { Live2DManager } from './AliceView';
+import type { GLManager } from './AliceSprite';
+
+import * as AliceDefine from './AliceDefine';
+import { AliceModel } from './AliceModel';
+import { AlicePlatform } from './AlicePlatform';
+
+export class AliceLive2DManager implements Live2DManager {
+	public constructor() {
+		this.viewMatrix_ = new CubismMatrix44();
+		this.model_ = null;
+	}
+
+	public initialize(): void {
+		const modelName: string = AliceDefine.ModelName;
+		if (AliceDefine.DebugLogEnable) {
+			AlicePlatform.printMessage(`[APP]model name: '${modelName}'`);
+		}
+		const modelPath: string = AliceDefine.ResourcesPath + modelName + '/';
+		let modelJsonName: string = AliceDefine.ModelName;
+		modelJsonName += '.model3.json';
+
+		const modelInstance = new AliceModel();
+		modelInstance.loadAssets(modelPath, modelJsonName);
+		this.model_ = modelInstance;
+	}
+
+	public release(): void {}
+
+	public setViewMatrix(matrix: CubismMatrix44): void {
+		for (let i = 0; i < 16; i++) {
+			this.viewMatrix_.getArray()[i] = matrix.getArray()[i];
+		}
+	}
+
+	public onUpdate(glManager: GLManager, canvas: HTMLCanvasElement): void {
+		if (this.model_ == null) {
+			return ;
+		}
+		const gl = glManager.getGL();
+		CubismWebGLOffscreenManager.getInstance().beginFrameProcess(gl);
+		const { width, height } = canvas;
+		const projection: CubismMatrix44 = new CubismMatrix44();
+		
+		if (this.model_)
+		projection.scale(height / width, 1.0);
+
+		projection.multiplyByMatrix(this.viewMatrix_);
+
+		this.model_.update();
+		this.model_.draw(projection);
+
+		// モデルで使用するオフスクリーン管理の終了処理
+		CubismWebGLOffscreenManager.getInstance().endFrameProcess(gl);
+		// もし余っているオフスクリーンのリソースを解放したい場合行う処理
+		CubismWebGLOffscreenManager.getInstance().releaseStaleRenderTextures(gl);
+	}
+
+	private viewMatrix_: CubismMatrix44;
+	private model_: AliceModel | null;
+}

@@ -39,6 +39,11 @@ export interface ShaderCreater {
 	createShader(): WebGLProgram | null;
 }
 
+export interface Live2DManager {
+	setViewMatrix(matrix: CubismMatrix44): void;
+	onUpdate(glManager: GLManager, canvas: HTMLCanvasElement): void;
+}
+
 export class AliceView {
 	/*
 		publicメソッド
@@ -92,15 +97,19 @@ export class AliceView {
 		}
 	}
 
-	public render(glManager_: GLManager, canvas: HTMLCanvasElement): void {
+	public render(glManager_: GLManager, canvas: HTMLCanvasElement, live2DManager: Live2DManager): void {
 		if (this.shader == null) {
 			AlicePlatform.printMessage('shader is not set');
 			return ;
 		}
 		glManager_.getGL().useProgram(this.shader);
+
 		if (this.background_) {
 			this.background_.render(this.shader, glManager_.getGL(), canvas);
 		}
+		glManager_.getGL().flush();
+		live2DManager.setViewMatrix(this.viewMatrix_);
+		live2DManager.onUpdate(glManager_, canvas);
 	}
 
 	public release(): void {
