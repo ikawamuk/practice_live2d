@@ -46,8 +46,13 @@ export class AliceLive2DManager implements Live2DManager {
 		const { width, height } = canvas;
 		const projection: CubismMatrix44 = new CubismMatrix44();
 		
-		if (this.model_)
-		projection.scale(height / width, 1.0);
+		// 横に長いモデルを縦長ウィンドウに表示する際モデルの横サイズでscaleを算出する
+		// if (横に長いモデルを縦長ウィンドウに表示する際モデルの横サイズでscaleを算出する) {
+		// 		...
+		// } 
+		// else {
+			projection.scale(height / width, 1.0);
+		// }
 
 		projection.multiplyByMatrix(this.viewMatrix_);
 

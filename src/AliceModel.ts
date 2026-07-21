@@ -3,9 +3,10 @@ import { CubismMatrix44 } from '@framework/math/cubismmatrix44';
 
 export class AliceModel {
 	public update() {
-
+		// TODO:
 	}
 	public draw(matrix: CubismMatrix44) {
+		// TODO:
 		matrix;
 	}
 
