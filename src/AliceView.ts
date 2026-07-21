@@ -6,6 +6,7 @@ import * as AliceDefine from './AliceDefine';
 import { TextureInfo } from './AliceTextureManager'
 import { AliceSprite } from './AliceSprite'
 import type { GLManager } from './AliceSprite'
+import { AlicePlatform } from './AlicePlatform';
 
 class LogicalCanvas {
 	width: number;
@@ -34,7 +35,7 @@ export interface TextureLoader {
 }
 
 export interface ShaderCreater {
-	createShader(): WebGLProgram;
+	createShader(): WebGLProgram | null;
 }
 
 export class AliceView {
@@ -87,6 +88,10 @@ export class AliceView {
 		if (this.shader == null) {
 			this.shader = shaderCreater.createShader();
 		}
+	}
+
+	public render(): void {
+		AlicePlatform.printMessage('rendering!!!');
 	}
 
 	public release(): void {

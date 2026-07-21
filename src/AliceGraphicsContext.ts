@@ -1,11 +1,11 @@
 
 import * as AliceDefine from './AliceDefine';
 import { AliceView } from './AliceView';
-import type { ShaderCreater } from './AliceView';
+import { AliceShaderCreater } from './AliceShaderCreater';
 import { AliceGLManager } from './AliceGLManager';
 import { AliceTextureManager } from './AliceTextureManager';
 
-export class AliceGraphicsContext implements ShaderCreater {
+export class AliceGraphicsContext {
 
 	/*
 		publicメソッド
@@ -14,36 +14,37 @@ export class AliceGraphicsContext implements ShaderCreater {
 		this.view_ = new AliceView();
 		this.glManager_ = new AliceGLManager();
 		this.textureManager_ = new AliceTextureManager();
+		this.shaderCreater_ = new AliceShaderCreater();
 		this.canvas_ = null;
 		this.frameBuffer_ = null;
+		this.resizeObserver_ = new ResizeObserver(
+		(entries: ResizeObserverEntry[], observer: ResizeObserver) =>
+			this.resizeObserverCallback.call(this, entries, observer)
+		);
+		this.needResize_ = true;
 	}
 
 	public initialize(): boolean {
 		this.canvas_ = this.makeNewCanvas();
-	
-		if (!this.glManager_.initialize(this.canvas_)) {
+		if (!this.initializeGLContext(this.canvas_)) {
 			return (false);
 		}
 
-		if (AliceDefine.CanvasSize === 'auto') {
-			this.resizeCanvas(); // need gl
-		} else {
-			this.canvas_.width = AliceDefine.CanvasSize.width;
-			this.canvas_.height = AliceDefine.CanvasSize.height;
-		}
+		this.setupFrameBuffer(this.frameBuffer_);
+		this.setupCanvasSize(this.canvas_);
 
+		this.shaderCreater_.setGLManager(this.glManager_);
 		this.textureManager_.setGLManager(this.glManager_);
 
-		const gl = this.glManager_.getGL();
-		if (this.frameBuffer_ == null) {
-			this.frameBuffer_ = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-		}
-
-		gl.enable(gl.BLEND);
-		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
 		this.view_.initialize(this.canvas_);
-		this.view_.initializeSprite(this.canvas_, this.glManager_, this.textureManager_, this);
+		this.view_.initializeSprite(
+			this.canvas_,
+			this.glManager_,
+			this.textureManager_,
+			this.shaderCreater_
+		);
+
+		this.resizeObserver_.observe(this.canvas_);
 		return (true);
 	}
 
@@ -51,7 +52,27 @@ export class AliceGraphicsContext implements ShaderCreater {
 		if (this.glManager_.getGL().isContextLost()) {
 			return;
 		}
-		
+
+		if (this.needResize_) {
+			this.onResize();
+			this.needResize_ = false;
+		}
+
+		const gl = this.glManager_.getGL();
+		// 画面の初期化
+		gl.clearColor(0.0, 0.0, 0.0, 1.0);
+		// 深度テストを有効化
+		gl.enable(gl.DEPTH_TEST);
+		// 近くにある物体は、遠くにある物体を覆い隠す
+		gl.depthFunc(gl.LEQUAL);
+		// カラーバッファや深度バッファをクリアする
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		gl.clearDepth(1.0);
+		// 透過設定
+		gl.enable(gl.BLEND);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+		// 描画更新
+		this.view_.render();
 	}
 
 	public release(): void {
@@ -61,12 +82,18 @@ export class AliceGraphicsContext implements ShaderCreater {
 		this.glManager_.release();
 	}
 
-	public createShader(): WebGLProgram {
-		const gl = this.glManager_.getGL();
-		// ...
-		const shaderProgramID = gl.createProgram();
-		// ...
-		return (shaderProgramID);
+	public onResize(): void {
+		if (this.canvas_ == null) {
+			return ;
+		}
+		this.resizeCanvas();
+		this.view_.initialize(this.canvas_);
+		this.view_.initializeSprite(
+			this.canvas_,
+			this.glManager_,
+			this.textureManager_,
+			this.shaderCreater_
+		);
 	}
 
 	public resizeCanvas(): void {
@@ -105,6 +132,42 @@ export class AliceGraphicsContext implements ShaderCreater {
 		return (canvas);
 	}
 
+	private initializeGLContext(canvas: HTMLCanvasElement): boolean {
+		if (!this.glManager_.initialize(canvas)) {
+			return (false);
+		}
+		const gl = this.glManager_.getGL();
+		gl.enable(gl.BLEND);
+		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+		return (true);
+	}
+
+	private setupFrameBuffer(framebuffer: WebGLFramebuffer | null): void {
+		if (framebuffer == null) {
+			const gl = this.getGLManager().getGL();
+			framebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+		}
+	}
+	private setupCanvasSize(canvas: HTMLCanvasElement): void {
+		if (AliceDefine.CanvasSize === 'auto') {
+			this.resizeCanvas(); // need gl
+		} else {
+			canvas.width = AliceDefine.CanvasSize.width;
+			canvas.height = AliceDefine.CanvasSize.height;
+		}
+	}
+
+	private resizeObserverCallback(
+		entries: ResizeObserverEntry[],
+		observer: ResizeObserver
+	): void {
+		if (AliceDefine.CanvasSize === 'auto') {
+			this.needResize_ = true;
+		}
+		entries;
+		observer;
+	}
+
 	/*
 		プロパティ
 	*/
@@ -112,6 +175,10 @@ export class AliceGraphicsContext implements ShaderCreater {
 
 	private glManager_: AliceGLManager;
 	private textureManager_: AliceTextureManager;
+	private shaderCreater_: AliceShaderCreater;
 	private canvas_: HTMLCanvasElement | null;
 	private frameBuffer_: WebGLFramebuffer | null;
+
+	private resizeObserver_: ResizeObserver;
+	private needResize_: boolean;
 }
