@@ -4,6 +4,10 @@ export class AlicePlatform {
 		console.log(message);
 	}
 
+	public static printError(message: string, error: Error): void {
+		console.error(message, error);
+	}
+
 	public static updateTime(): void {
 		this.currentFrame = Date.now();
 		this.deltaTime = (this.currentFrame - this.lastFrame) / 1000;
