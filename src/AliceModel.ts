@@ -5,14 +5,6 @@ import { CubismUserModel } from '@framework/model/cubismusermodel';
 import { CubismPhysicsUpdater } from '@framework/motion/cubismphysicsupdater';
 import { CubismUpdateScheduler } from '@framework/motion/cubismupdatescheduler';
 
-import type {
-  ACubismMotion,
-//  BeganMotionCallback,
-//  FinishedMotionCallback
-} from '@framework/motion/acubismmotion';
-
-//import { CubismMotion } from '@framework/motion/cubismmotion';
-
 import { CubismMatrix44 } from '@framework/math/cubismmatrix44';
 
 import type { Model } from './AliceLive2DManager';
@@ -46,15 +38,6 @@ export class AliceModel extends CubismUserModel implements Model {
 		const deltaTimeSeconds: number = AlicePlatform.getDeltaTime();
 		this.userTimeSeconds_ += deltaTimeSeconds;
 		this._model.loadParameters();
-
-		if (this._motionManager.isFinished()) {
-			; //this.startRandomMotion(AliceDefine.MotionGroupIdle, AliceDefine.PriorityIdle);
-		} else {
-			this._motionManager.updateMotion(
-				this._model,
-				deltaTimeSeconds
-			);
-		}
 
 		this._model.saveParameters();
 		this.updateScheduler_.onLateUpdate(this._model, deltaTimeSeconds);
@@ -102,7 +85,6 @@ export class AliceModel extends CubismUserModel implements Model {
 	public constructor() {
 		super();
 		this.state_ = LoadStep.LoadingAssets;
-		this.motions_ = new Map<string, ACubismMotion>();
 		this.userTimeSeconds_ = 0.0;
 		this.modelSetting_ = null;
 		this.updateScheduler_ = new CubismUpdateScheduler();
@@ -174,45 +156,9 @@ export class AliceModel extends CubismUserModel implements Model {
 		this.state_ = LoadStep.CompleteSetup;
 	}
 
-	//private startMotion(
-	//	group: string,
-	//	no: number,
-	//	priority: number,
-	//): void {
-	//	AlicePlatform.printMessage('HERE1');
-	//	if (priority == AliceDefine.PriorityForce) {
-	//		this._motionManager.setReservePriority(priority);
-	//	} else if (!this._motionManager.reserveMotion(priority)) {
-	//		if (this._debugMode) { AlicePlatform.printMessage(`[APP]can't start motion.`); }
-	//		return ;
-	//	}
-	//	AlicePlatform.printMessage('HERE2');
-	//	const name = `${group}_${no}`;
-	//	const motion: CubismMotion = this.motions_.get(name) as CubismMotion;
-	//	let autoDelete = false;
-	//	if (motion == null) { return ; }
-	//	//motion.setBeganMotionHandler(null as BeganMotionCallback);
-	//	//motion.setFinishedMotionHandler(null as FinishedMotionCallback);
-		
-	//	return (this._motionManager.startMotionPriority(motion, autoDelete, priority));
-	//}
-
-	//private startRandomMotion(
-	//	group: string,
-	//	priority: number,
-	//): void {
-	//	AlicePlatform.printMessage(`getMotionCount ${this.modelSetting_!.getMotionCount(group)}`);
-	//	if (this.modelSetting_ == null || this.modelSetting_.getMotionCount(group) == 0) { return ;}
-	//	const no: number = Math.floor(Math.random() * this.modelSetting_.getMotionCount(group));
-	//	return (this.startMotion(group, no, priority));
-	//}
-
-
 	private state_: LoadStep;
 
 	private userTimeSeconds_: number;
-
-	//private motions_: Map<string, ACubismMotion>;
 
 	private updateScheduler_: CubismUpdateScheduler;
 	private modelSetting_: ICubismModelSetting | null;
