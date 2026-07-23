@@ -108,9 +108,8 @@ export class AliceView {
 
 		if (this.background_) {
 			this.background_.render(this.shader, graphicsContext.getGLManager().getGL(), graphicsContext.getCanvas());
+			graphicsContext.getGLManager().getGL().flush();
 		}
-
-		graphicsContext.getGLManager().getGL().flush();
 
 		live2DManager.setViewMatrix(this.viewMatrix_);
 		live2DManager.onUpdate(graphicsContext);
