@@ -27,7 +27,7 @@ import { AliceTextureManager } from './AliceTextureManager';
 import { CubismFramework } from '@framework/live2dcubismframework';
 
 
-export interface GraphicsContext {
+export interface DrawingContext {
 	getCanvas(): HTMLCanvasElement;
 	getFrameBuffer(): WebGLFramebuffer;
 	getGLManager(): AliceGLManager;
@@ -36,7 +36,7 @@ export interface GraphicsContext {
 
 export class AliceModel extends CubismUserModel implements Model {
 	public update(): void {
-		if (this._model == null) { return ; }
+		if (!this.SetupComplete_) { return ; }
 		const deltaTimeSeconds: number = AlicePlatform.getDeltaTime();
 		this.userTimeSeconds_ += deltaTimeSeconds;
 		this._model.loadParameters();
@@ -46,25 +46,25 @@ export class AliceModel extends CubismUserModel implements Model {
 		this._model.update();
 	}
 
-	public draw(matrix: CubismMatrix44, graphicsContext: GraphicsContext): void {
-		if (this._model == null) return ;
+	public draw(matrix: CubismMatrix44, drawingContext: DrawingContext): void {
+		if (!this.SetupComplete_) { return ; }
 		matrix.multiplyByMatrix(this._modelMatrix);
 		this.getRenderer().setMvpMatrix(matrix);
-		this.doDraw(graphicsContext);
+		this.doDraw(drawingContext);
 	}
 
-	public doDraw(graphicsContext: GraphicsContext) {
+	public doDraw(drawingContext: DrawingContext) {
 		if (this._model == null) return ;
-		const canvas = graphicsContext.getCanvas();
+		const canvas = drawingContext.getCanvas();
 		const viewport: number[] = [0, 0, canvas.width, canvas.height];
 		this.getRenderer().setRenderState(
-			graphicsContext.getFrameBuffer(),
+			drawingContext.getFrameBuffer(),
 			viewport
 		);
 		this.getRenderer().drawModel(AliceDefine.ShaderPath);
 	}
 
-	public async loadAssets(dir: string, modelJsonFileName: string, graphicsContext: GraphicsContext): Promise<void> {
+	public async loadAssets(dir: string, modelJsonFileName: string, drawingContext: DrawingContext): Promise<void> {
 		this.modelHomeDir_ = dir;
 		const url = `${this.modelHomeDir_}${modelJsonFileName}`;
 		console.log(`[AliceModel] initializing: ${url}`);
@@ -76,18 +76,23 @@ export class AliceModel extends CubismUserModel implements Model {
 			}
 			const arrayBuffer = await response.arrayBuffer();
 			const setting = new CubismModelSettingJson(arrayBuffer, arrayBuffer.byteLength);
-			await this.setupModel(setting, graphicsContext.getCanvas(), graphicsContext.getGLManager());
+			await this.setupModel(setting, drawingContext.getCanvas(), drawingContext.getGLManager());
 			await this.setupPhysics();
 			this.setupEyeBlink();
 			this.setupBreath();
-			await this.setupTexture(graphicsContext.getTextureManager());
+			await this.setupTexture(drawingContext.getTextureManager());
+			this.getRenderer().startUp(drawingContext.getGLManager().getGL());
+			this.getRenderer().loadShaders(AliceDefine.ShaderPath);
+			this.SetupComplete_ = true;
 		} catch (error) {
 			AlicePlatform.printError('Failed to load Assets', error as Error);
 		}
+		
 	}
 
 	public constructor() {
 		super();
+		this.SetupComplete_ = false;
 		this.userTimeSeconds_ = 0.0;
 		this.modelSetting_ = null;
 		this.motionUpdated_ = false;
@@ -130,8 +135,6 @@ export class AliceModel extends CubismUserModel implements Model {
 		this.loadModel(arrayBuffer, this._mocConsistency);
 
 		this.createRenderer(canvas.width, canvas.height);
-		this.getRenderer().startUp(glManager.getGL());
-		this.getRenderer().loadShaders(AliceDefine.ShaderPath);
 	}
 
 
@@ -197,6 +200,7 @@ export class AliceModel extends CubismUserModel implements Model {
 		if (!isTextureBinded) throw new Error(`Failed to bind texture file`);
 	}
 
+	private SetupComplete_: boolean;
 	private userTimeSeconds_: number;
 
 	private motionUpdated_: boolean;

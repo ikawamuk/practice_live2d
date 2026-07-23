@@ -6,9 +6,36 @@ import { AliceGLManager } from './AliceGLManager';
 import { AliceTextureManager } from './AliceTextureManager';
 import { AlicePlatform } from './AlicePlatform';
 import { AliceLive2DManager} from './AliceLive2DManager';
-import type { GraphicsContext } from './AliceModel';
+import type { DrawingContext } from './AliceModel';
 
-export class AliceGraphicsContext implements GraphicsContext {
+function resolveFrameBuffer(
+	gl: WebGL2RenderingContext,
+	framebuffer: WebGLFramebuffer | null,
+): WebGLFramebuffer {
+	if (framebuffer != null) { return (framebuffer); }
+	const bound = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+	if (bound !== null && !(bound instanceof WebGLFramebuffer)) {
+		throw new Error('FRAMEBUFFER_BINDING is not a WebGLFramebuffer');
+	}
+	return (bound);
+}
+
+function resolveCanvasSize(
+	gl: WebGL2RenderingContext,
+	canvas: HTMLCanvasElement,
+): HTMLCanvasElement {
+	if (AliceDefine.CanvasSize === 'auto') {
+		canvas.width = canvas.clientWidth * window.devicePixelRatio;
+		canvas.height = canvas.clientHeight * window.devicePixelRatio;
+		gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+	} else {
+		canvas.width = AliceDefine.CanvasSize.width;
+		canvas.height = AliceDefine.CanvasSize.height;
+	}
+	return (canvas);
+}
+
+export class AliceGraphicsContext implements DrawingContext {
 
 	/*
 		publicメソッド
@@ -34,8 +61,9 @@ export class AliceGraphicsContext implements GraphicsContext {
 			return (false);
 		}
 
-		this.frameBuffer_ = this.setupFrameBuffer(this.frameBuffer_);
-		this.canvas_ = this.setupCanvasSize(this.canvas_);
+		const gl = this.glManager_.getGL();
+		this.frameBuffer_ = resolveFrameBuffer(gl, this.frameBuffer_);
+		this.canvas_ = resolveCanvasSize(gl, this.canvas_);
 
 		this.shaderCreater_.setGLManager(this.glManager_);
 		this.textureManager_.setGLManager(this.glManager_);
@@ -114,10 +142,7 @@ export class AliceGraphicsContext implements GraphicsContext {
 			AlicePlatform.printMessage('canvas is not set');
 			return ;
 		}
-		this.canvas_.width = this.canvas_.clientWidth * window.devicePixelRatio;
-		this.canvas_.height = this.canvas_.clientHeight * window.devicePixelRatio;
-		const gl = this.glManager_.getGL();
-		gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+		this.canvas_ = resolveCanvasSize(this.glManager_.getGL(), this.canvas_);
 	}
 
 	public getGLManager(): AliceGLManager {
@@ -157,27 +182,6 @@ export class AliceGraphicsContext implements GraphicsContext {
 		gl.enable(gl.BLEND);
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		return (true);
-	}
-
-	private setupFrameBuffer(framebuffer: WebGLFramebuffer | null): WebGLFramebuffer {
-		if (framebuffer == null) {
-			const gl = this.getGLManager().getGL();
-			const bound = gl.getParameter(gl.FRAMEBUFFER_BINDING);
-			if (bound !== null && !(bound instanceof WebGLFramebuffer)) {
-				throw new Error('FRAMEBUFFER_BINDING is not a WebGLFramebuffer');
-			}
-			return (bound);
-		}
-		return (framebuffer);
-	}
-	private setupCanvasSize(canvas: HTMLCanvasElement): HTMLCanvasElement {
-		if (AliceDefine.CanvasSize === 'auto') {
-			this.resizeCanvas(); // need gl
-		} else {
-			canvas.width = AliceDefine.CanvasSize.width;
-			canvas.height = AliceDefine.CanvasSize.height;
-		}
-		return (canvas);
 	}
 
 	private resizeObserverCallback(
