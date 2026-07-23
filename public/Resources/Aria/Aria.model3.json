@@ -1,12 +1,12 @@
 {
 	"Version": 3,
 	"FileReferences": {
-		"Moc": "Aria_Final_one.moc3",
+		"Moc": "Aria.moc3",
 		"Textures": [
 			"texture_00.png"
 		],
-		"Physics": "Aria_Final_one.physics3.json",
-		"DisplayInfo": "Aria_Final_one.cdi3.json"
+		"Physics": "Aria.physics3.json",
+		"DisplayInfo": "Aria.cdi3.json"
 	},
 	"Groups": [
 		{

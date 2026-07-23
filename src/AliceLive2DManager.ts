@@ -3,11 +3,11 @@ import { CubismMatrix44 } from '@framework/math/cubismmatrix44';
 import { CubismWebGLOffscreenManager } from '@framework/rendering/cubismoffscreenmanager';
 
 import type { Live2DManager } from './AliceView';
-import type { GLManager } from './AliceSprite';
 
 import * as AliceDefine from './AliceDefine';
 import { AliceModel } from './AliceModel';
 import { AlicePlatform } from './AlicePlatform';
+import type { GraphicsContext } from './AliceModel';
 
 export class AliceLive2DManager implements Live2DManager {
 	public constructor() {
@@ -15,7 +15,7 @@ export class AliceLive2DManager implements Live2DManager {
 		this.model_ = null;
 	}
 
-	public initialize(): void {
+	public initialize(graphicsContext: GraphicsContext): void {
 		const modelName: string = AliceDefine.ModelName;
 		if (AliceDefine.DebugLogEnable) {
 			AlicePlatform.printMessage(`[APP]model name: '${modelName}'`);
@@ -25,7 +25,7 @@ export class AliceLive2DManager implements Live2DManager {
 		modelJsonName += '.model3.json';
 
 		const modelInstance = new AliceModel();
-		modelInstance.loadAssets(modelPath, modelJsonName);
+		modelInstance.loadAssets(modelPath, modelJsonName, graphicsContext);
 		this.model_ = modelInstance;
 	}
 
@@ -37,13 +37,13 @@ export class AliceLive2DManager implements Live2DManager {
 		}
 	}
 
-	public onUpdate(glManager: GLManager, canvas: HTMLCanvasElement): void {
+	public onUpdate(graphicsContext: GraphicsContext): void {
 		if (this.model_ == null) {
 			return ;
 		}
-		const gl = glManager.getGL();
+		const gl = graphicsContext.getGLManager().getGL();
 		CubismWebGLOffscreenManager.getInstance().beginFrameProcess(gl);
-		const { width, height } = canvas;
+		const { width, height } = graphicsContext.getCanvas();
 		const projection: CubismMatrix44 = new CubismMatrix44();
 		
 		// 横に長いモデルを縦長ウィンドウに表示する際モデルの横サイズでscaleを算出する
@@ -57,7 +57,7 @@ export class AliceLive2DManager implements Live2DManager {
 		projection.multiplyByMatrix(this.viewMatrix_);
 
 		this.model_.update();
-		this.model_.draw(projection);
+		this.model_.draw(projection, graphicsContext);
 
 		// モデルで使用するオフスクリーン管理の終了処理
 		CubismWebGLOffscreenManager.getInstance().endFrameProcess(gl);

@@ -651,9 +651,12 @@ export class LAppModel extends CubismUserModel {
       ); // モーションを更新
     }
 
+	// 追加-----
     // 右手・左手のモーションは専用マネージャで毎フレーム更新する
     this._rightArmMotionManager.updateMotion(this._model, deltaTimeSeconds);
     this._leftArmMotionManager.updateMotion(this._model, deltaTimeSeconds);
+	// --------
+
 
     this._model.saveParameters(); // 状態を保存
     //--------------------------------------------------------------------------

@@ -8,6 +8,7 @@ import { AliceSprite } from './AliceSprite';
 import { AlicePlatform } from './AlicePlatform';
 import { AliceSpriteManager } from './AliceSpriteManager';
 import type { GLManager } from './AliceSprite';
+import type { GraphicsContext } from './AliceModel';
 
 class LogicalCanvas {
 	width: number;
@@ -41,7 +42,7 @@ export interface ShaderCreater {
 
 export interface Live2DManager {
 	setViewMatrix(matrix: CubismMatrix44): void;
-	onUpdate(glManager: GLManager, canvas: HTMLCanvasElement): void;
+	onUpdate(graphicsContext: GraphicsContext): void;
 }
 
 export class AliceView {
@@ -97,19 +98,22 @@ export class AliceView {
 		}
 	}
 
-	public render(glManager_: GLManager, canvas: HTMLCanvasElement, live2DManager: Live2DManager): void {
+	public render(live2DManager: Live2DManager, graphicsContext: GraphicsContext): void {
 		if (this.shader == null) {
 			AlicePlatform.printMessage('shader is not set');
 			return ;
 		}
-		glManager_.getGL().useProgram(this.shader);
+
+		graphicsContext.getGLManager().getGL().useProgram(this.shader);
 
 		if (this.background_) {
-			this.background_.render(this.shader, glManager_.getGL(), canvas);
+			this.background_.render(this.shader, graphicsContext.getGLManager().getGL(), graphicsContext.getCanvas());
 		}
-		glManager_.getGL().flush();
+
+		graphicsContext.getGLManager().getGL().flush();
+
 		live2DManager.setViewMatrix(this.viewMatrix_);
-		live2DManager.onUpdate(glManager_, canvas);
+		live2DManager.onUpdate(graphicsContext);
 	}
 
 	public release(): void {

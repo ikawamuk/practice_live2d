@@ -21,6 +21,9 @@ export const ViewLogicalMaxTop = 2.0;
 // publicディレクトリはルート直下として配信される
 export const ResourcesPath = '/Resources/';
 
+// シェーダー相対パス
+export const ShaderPath = '../CubismWebFramework/Shaders/WebGL/';
+
 // モデルの後ろにある背景の画像ファイル
 export const BackImageName = 'Gemini_Generated_Image_Cyber.png';
 

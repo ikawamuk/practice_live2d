@@ -6,8 +6,9 @@ import { AliceGLManager } from './AliceGLManager';
 import { AliceTextureManager } from './AliceTextureManager';
 import { AlicePlatform } from './AlicePlatform';
 import { AliceLive2DManager} from './AliceLive2DManager';
+import type { GraphicsContext } from './AliceModel';
 
-export class AliceGraphicsContext {
+export class AliceGraphicsContext implements GraphicsContext {
 
 	/*
 		publicメソッド
@@ -33,8 +34,8 @@ export class AliceGraphicsContext {
 			return (false);
 		}
 
-		this.setupFrameBuffer(this.frameBuffer_);
-		this.setupCanvasSize(this.canvas_);
+		this.frameBuffer_ = this.setupFrameBuffer(this.frameBuffer_);
+		this.canvas_ = this.setupCanvasSize(this.canvas_);
 
 		this.shaderCreater_.setGLManager(this.glManager_);
 		this.textureManager_.setGLManager(this.glManager_);
@@ -47,7 +48,7 @@ export class AliceGraphicsContext {
 			this.shaderCreater_
 		);
 
-		this.live2DManager_.initialize();
+		this.live2DManager_.initialize(this);
 		this.resizeObserver_.observe(this.canvas_);
 		return (true);
 	}
@@ -77,9 +78,9 @@ export class AliceGraphicsContext {
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 		// 描画更新
 		if (this.canvas_ == null) {
-			throw new Error('canvas is not set');
+			throw new Error('AliceGraphicsContext is not initialized');
 		}
-		this.view_.render(this.glManager_, this.canvas_, this.live2DManager_);
+		this.view_.render(this.live2DManager_, this);
 	}
 
 	public release(): void {
@@ -132,6 +133,9 @@ export class AliceGraphicsContext {
 		return (this.canvas_);
 	}
 
+	public getFrameBuffer(): WebGLFramebuffer{
+		return (this.frameBuffer_  as WebGLFramebuffer);
+	}
 	/*
 		privateメソッド
 	*/
@@ -155,19 +159,25 @@ export class AliceGraphicsContext {
 		return (true);
 	}
 
-	private setupFrameBuffer(framebuffer: WebGLFramebuffer | null): void {
+	private setupFrameBuffer(framebuffer: WebGLFramebuffer | null): WebGLFramebuffer {
 		if (framebuffer == null) {
 			const gl = this.getGLManager().getGL();
-			framebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+			const bound = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+			if (bound !== null && !(bound instanceof WebGLFramebuffer)) {
+				throw new Error('FRAMEBUFFER_BINDING is not a WebGLFramebuffer');
+			}
+			return (bound);
 		}
+		return (framebuffer);
 	}
-	private setupCanvasSize(canvas: HTMLCanvasElement): void {
+	private setupCanvasSize(canvas: HTMLCanvasElement): HTMLCanvasElement {
 		if (AliceDefine.CanvasSize === 'auto') {
 			this.resizeCanvas(); // need gl
 		} else {
 			canvas.width = AliceDefine.CanvasSize.width;
 			canvas.height = AliceDefine.CanvasSize.height;
 		}
+		return (canvas);
 	}
 
 	private resizeObserverCallback(

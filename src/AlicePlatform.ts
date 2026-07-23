@@ -10,6 +10,10 @@ export class AlicePlatform {
 		this.lastFrame = this.currentFrame;
 	}
 
+	public static getDeltaTime(): number {
+		return this.deltaTime;
+	}
+
 	static currentFrame = 0.0;
 	static lastFrame = 0.0;
 	static deltaTime = 0.0;
