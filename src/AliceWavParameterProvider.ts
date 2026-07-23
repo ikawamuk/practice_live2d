@@ -2,11 +2,8 @@ import { IParameterProvider } from '@framework/motion/iparameterprovider';
 
 export class AliceWavParameterProvider implements IParameterProvider {
 
+	// AnalyserNodeを使う！
 	public async start(filePath: string): Promise<void> {
-		await this.loadWavFile(filePath);
-	}
-
-	public async loadWavFile(filePath: string): Promise<void> {
 		filePath;
 	}
 

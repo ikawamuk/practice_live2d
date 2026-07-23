@@ -71,8 +71,6 @@ export class AliceModel extends CubismUserModel implements Model {
 	public async startLipSyncSound(soundFileName: string): Promise<void> {
 		const path = this.modelHomeDir_ + soundFileName;
 		await this.wavParameterProvider_.start(path);
-		const audio = new Audio(path);
-		audio.play().catch(() => {});
 	}
 
 	public async loadAssets(dir: string, modelJsonFileName: string, drawingContext: DrawingContext): Promise<void> {
