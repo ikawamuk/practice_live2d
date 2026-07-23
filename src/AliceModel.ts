@@ -5,6 +5,9 @@ import { CubismUserModel } from '@framework/model/cubismusermodel';
 import { CubismPhysicsUpdater } from '@framework/motion/cubismphysicsupdater';
 import { CubismUpdateScheduler } from '@framework/motion/cubismupdatescheduler';
 
+import { CubismEyeBlink } from '@framework/effect/cubismeyeblink';
+import { CubismEyeBlinkUpdater } from '@framework/motion/cubismeyeblinkupdater';
+
 import { CubismMatrix44 } from '@framework/math/cubismmatrix44';
 
 import type { Model } from './AliceLive2DManager';
@@ -15,16 +18,6 @@ import * as AliceDefine from './AliceDefine';
 import { AliceTextureManager } from './AliceTextureManager';
 
 
-const LoadStep = {
-	LoadingAssets: "LoadingAssets",
-	LoadingModel: "LoadingModel",
-	LoadingPhysics: "LoadingPhysics",
-	LoadingTexture: "toLoadTexture",
-	CompleteSetup: "CompleteSetup"
-} as const;
-
-type LoadStep = (typeof LoadStep)[keyof typeof LoadStep];
-
 export interface GraphicsContext {
 	getCanvas(): HTMLCanvasElement;
 	getFrameBuffer(): WebGLFramebuffer;
@@ -34,18 +27,17 @@ export interface GraphicsContext {
 
 export class AliceModel extends CubismUserModel implements Model {
 	public update(): void {
-		if (this.state_ != LoadStep.CompleteSetup) return ;
 		const deltaTimeSeconds: number = AlicePlatform.getDeltaTime();
 		this.userTimeSeconds_ += deltaTimeSeconds;
 		this._model.loadParameters();
-
+		this.motionUpdated_ = false;
 		this._model.saveParameters();
 		this.updateScheduler_.onLateUpdate(this._model, deltaTimeSeconds);
 		this._model.update();
 	}
 
 	public draw(matrix: CubismMatrix44, graphicsContext: GraphicsContext): void {
-		if (this._model == null || this.state_ != LoadStep.CompleteSetup) return ;
+		if (this._model == null) return ;
 		matrix.multiplyByMatrix(this._modelMatrix);
 		this.getRenderer().setMvpMatrix(matrix);
 		this.doDraw(graphicsContext);
@@ -77,6 +69,7 @@ export class AliceModel extends CubismUserModel implements Model {
 			await this.setupModel(setting, graphicsContext.getCanvas(), graphicsContext.getGLManager());
 			await this.setupPhysics();
 			await this.setupTexture(graphicsContext.getTextureManager());
+			await this.setupEyeBlink();
 		} catch (error) {
 			AlicePlatform.printError('Failed to load Assets', error as Error);
 		}
@@ -84,9 +77,9 @@ export class AliceModel extends CubismUserModel implements Model {
 
 	public constructor() {
 		super();
-		this.state_ = LoadStep.LoadingAssets;
 		this.userTimeSeconds_ = 0.0;
 		this.modelSetting_ = null;
+		this.motionUpdated_ = false;
 		this.updateScheduler_ = new CubismUpdateScheduler();
 		this.modelHomeDir_ = null;
 	}
@@ -110,7 +103,6 @@ export class AliceModel extends CubismUserModel implements Model {
 		if (!response.ok) { throw new Error(`Failed to load moc file ${path} (status ${response.status})`); }
 		
 		const arrayBuffer = await response.arrayBuffer();
-		this.state_ = LoadStep.LoadingModel;
 		this.loadModel(arrayBuffer, this._mocConsistency);
 
 		this.createRenderer(canvas.width, canvas.height);
@@ -126,7 +118,6 @@ export class AliceModel extends CubismUserModel implements Model {
 		const response = await fetch(path);
 		if (!response.ok) { return AlicePlatform.printMessage(`failed to load physics file ${path} (status ${response.status})`); }
 		const arrayBuffer = await response.arrayBuffer();
-		this.state_ = LoadStep.LoadingPhysics;
 		this.loadPhysics(arrayBuffer, arrayBuffer.byteLength);
 		if (this._physics) {
 			const physicsUpdater = new CubismPhysicsUpdater(this._physics);
@@ -134,10 +125,20 @@ export class AliceModel extends CubismUserModel implements Model {
 		}
 	}
 
+	private async setupEyeBlink(): Promise<void> {
+		if (this.modelSetting_ == null
+		|| this.modelSetting_.getExpressionCount() == 0) { return ;}
+		this._eyeBlink = CubismEyeBlink.create(this.modelSetting_);
+		const eyeBlinkUpdater = new CubismEyeBlinkUpdater(
+			() => this.motionUpdated_,
+			this._eyeBlink
+		);
+		this.updateScheduler_.addUpdatableList(eyeBlinkUpdater);
+	}
+
 	private async setupTexture(textureManager: AliceTextureManager): Promise<void> {
 		if (this.modelSetting_ == null) { return ; }
 		const textureCount: number = this.modelSetting_.getTextureCount();
-		this.state_ = LoadStep.LoadingTexture;
 		let isTextureBinded = false;
 		for (let i = 0; i < textureCount; ++i) {
 			if (this.modelSetting_.getTextureFileName(i) == '') {
@@ -153,12 +154,11 @@ export class AliceModel extends CubismUserModel implements Model {
 			this.getRenderer().setIsPremultipliedAlpha(true);
 		}
 		if (!isTextureBinded) throw new Error(`Failed to bind texture file`);
-		this.state_ = LoadStep.CompleteSetup;
 	}
 
-	private state_: LoadStep;
-
 	private userTimeSeconds_: number;
+
+	private motionUpdated_: boolean;
 
 	private updateScheduler_: CubismUpdateScheduler;
 	private modelSetting_: ICubismModelSetting | null;
