@@ -81,8 +81,7 @@ export class AliceModel extends CubismUserModel implements Model {
 			this.setupEyeBlink();
 			this.setupBreath();
 			await this.setupTexture(drawingContext.getTextureManager());
-			this.getRenderer().startUp(drawingContext.getGLManager().getGL());
-			this.getRenderer().loadShaders(AliceDefine.ShaderPath);
+			
 			this.SetupComplete_ = true;
 		} catch (error) {
 			AlicePlatform.printError('Failed to load Assets', error as Error);
@@ -135,6 +134,8 @@ export class AliceModel extends CubismUserModel implements Model {
 		this.loadModel(arrayBuffer, this._mocConsistency);
 
 		this.createRenderer(canvas.width, canvas.height);
+		this.getRenderer().startUp(glManager.getGL());
+		this.getRenderer().loadShaders(AliceDefine.ShaderPath);
 	}
 
 

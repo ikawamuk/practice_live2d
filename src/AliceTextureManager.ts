@@ -56,10 +56,9 @@ export class AliceTextureManager implements TextureLoader {
 						gl.TEXTURE_MAG_FILTER,
 						gl.LINEAR
 					);
-					//// Premult処理を行わせる
-					//if (usePremultiply) {
-					//	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-					//}
+					// renderer側の setIsPremultipliedAlpha(true) と揃えるため、
+					// アップロード時に RGB へ alpha を乗算する（輪郭の白抜き防止）
+					gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
 					// テクスチャにピクセルを書き込む
 					gl.texImage2D(
 						gl.TEXTURE_2D,
