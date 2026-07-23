@@ -16,6 +16,10 @@ import { CubismBreathUpdater } from '@framework/motion/cubismbreathupdater';
 import { CubismEyeBlink } from '@framework/effect/cubismeyeblink';
 import { CubismEyeBlinkUpdater } from '@framework/motion/cubismeyeblinkupdater';
 
+import { CubismFramework } from '@framework/live2dcubismframework';
+
+import { CubismLipSyncUpdater } from '@framework/motion/cubismlipsyncupdater';
+
 import { CubismMatrix44 } from '@framework/math/cubismmatrix44';
 
 import type { Model } from './AliceLive2DManager';
@@ -24,7 +28,7 @@ import { AliceGLManager } from './AliceGLManager';
 import { AlicePlatform } from './AlicePlatform';
 import * as AliceDefine from './AliceDefine';
 import { AliceTextureManager } from './AliceTextureManager';
-import { CubismFramework } from '@framework/live2dcubismframework';
+import { AliceWavParameterProvider } from './AliceWavParameterProvider';
 
 
 export interface DrawingContext {
@@ -80,6 +84,7 @@ export class AliceModel extends CubismUserModel implements Model {
 			await this.setupPhysics();
 			this.setupEyeBlink();
 			this.setupBreath();
+			this.setupLipsync();
 			await this.setupTexture(drawingContext.getTextureManager());
 			
 			this.SetupComplete_ = true;
@@ -110,6 +115,8 @@ export class AliceModel extends CubismUserModel implements Model {
 		this.idParamBodyAngleX_ = CubismFramework.getIdManager().getId(
 			CubismDefaultParameterId.ParamBodyAngleX
 		);
+		this.lipSyncIds_ = new Array<CubismIdHandle>();
+		this.wavParameterProvider_ = new AliceWavParameterProvider();
 	}
 
 	public release(): void {
@@ -138,6 +145,25 @@ export class AliceModel extends CubismUserModel implements Model {
 		this.getRenderer().loadShaders(AliceDefine.ShaderPath);
 	}
 
+	private async setupTexture(textureManager: AliceTextureManager): Promise<void> {
+		if (this.modelSetting_ == null) { return ; }
+		const textureCount: number = this.modelSetting_.getTextureCount();
+		let isTextureBinded = false;
+		for (let i = 0; i < textureCount; ++i) {
+			if (this.modelSetting_.getTextureFileName(i) == '') {
+				AlicePlatform.printMessage('getTextureFileName null');
+				continue ;
+			}
+			const texturePath = this.modelHomeDir_ + this.modelSetting_.getTextureFileName(i);
+			const textureInfo = await textureManager.createTextureFromPngFile(texturePath);
+			if (textureInfo.id != null) {
+				this.getRenderer().bindTexture(i, textureInfo.id);
+				isTextureBinded = true;
+			}
+			this.getRenderer().setIsPremultipliedAlpha(true);
+		}
+		if (!isTextureBinded) throw new Error(`Failed to bind texture file`);
+	}
 
 	private async setupPhysics(): Promise<void> {
 		if (this.modelSetting_ == null
@@ -166,7 +192,14 @@ export class AliceModel extends CubismUserModel implements Model {
 
 	private setupBreath(): void {
 		this._breath = CubismBreath.create();
-		// 以下要調査
+		/**
+		 * BreathParameterDataコンストラクタ
+		 * @param parameterId   呼吸をひもづけるパラメータID
+		 * @param offset        呼吸を正弦波としたときの、波のオフセット
+		 * @param peak          呼吸を正弦波としたときの、波の高さ
+		 * @param cycle         呼吸を正弦波としたときの、波の周期
+		 * @param weight        パラメータへの重み
+		*/
 		const breathParameters: Array<BreathParameterData> = [
 			new BreathParameterData(this.idParamAngleX_, 0.0, 15.0, 6.5345, 0.5),
 			new BreathParameterData(this.idParamAngleY_, 0.0, 8.0, 3.5345, 0.5),
@@ -181,24 +214,14 @@ export class AliceModel extends CubismUserModel implements Model {
 		this.updateScheduler_.addUpdatableList(breathUpdater);
 	};
 
-	private async setupTexture(textureManager: AliceTextureManager): Promise<void> {
+	private setupLipsync(): void {
 		if (this.modelSetting_ == null) { return ; }
-		const textureCount: number = this.modelSetting_.getTextureCount();
-		let isTextureBinded = false;
-		for (let i = 0; i < textureCount; ++i) {
-			if (this.modelSetting_.getTextureFileName(i) == '') {
-				AlicePlatform.printMessage('getTextureFileName null');
-				continue ;
-			}
-			const texturePath = this.modelHomeDir_ + this.modelSetting_.getTextureFileName(i);
-			const textureInfo = await textureManager.createTextureFromPngFile(texturePath);
-			if (textureInfo.id != null) {
-				this.getRenderer().bindTexture(i, textureInfo.id);
-				isTextureBinded = true;
-			}
-			this.getRenderer().setIsPremultipliedAlpha(true);
+		const lipSyncIdCount = this.modelSetting_.getLipSyncParameterCount();
+		for (let i: number = 0; i < lipSyncIdCount; ++i) {
+			this.lipSyncIds_[i] = this.modelSetting_.getLipSyncParameterId(i);
 		}
-		if (!isTextureBinded) throw new Error(`Failed to bind texture file`);
+		const lipSyncUpdater = new CubismLipSyncUpdater(this.lipSyncIds_, this.wavParameterProvider_);
+		this.updateScheduler_.addUpdatableList(lipSyncUpdater);
 	}
 
 	private SetupComplete_: boolean;
@@ -210,6 +233,9 @@ export class AliceModel extends CubismUserModel implements Model {
 	private idParamAngleY_: CubismIdHandle;
 	private idParamAngleZ_: CubismIdHandle;
 	private idParamBodyAngleX_: CubismIdHandle;
+
+	private lipSyncIds_: Array<CubismIdHandle>;
+	private wavParameterProvider_: AliceWavParameterProvider;
 
 	private updateScheduler_: CubismUpdateScheduler;
 	private modelSetting_: ICubismModelSetting | null;
