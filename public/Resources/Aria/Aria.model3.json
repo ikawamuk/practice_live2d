@@ -12,7 +12,17 @@
 		{
 			"Target": "Parameter",
 			"Name": "EyeBlink",
-			"Ids": []
+			"Ids": [
+				"ParamEyeLOpen",
+				"ParamEyeROpen"
+			]
+		},
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": [
+				"ParamMouthOpenY"
+			]
 		}
 	]
 }

@@ -69,7 +69,7 @@ export class AliceModel extends CubismUserModel implements Model {
 			await this.setupModel(setting, graphicsContext.getCanvas(), graphicsContext.getGLManager());
 			await this.setupPhysics();
 			await this.setupTexture(graphicsContext.getTextureManager());
-			await this.setupEyeBlink();
+			this.setupEyeBlink();
 		} catch (error) {
 			AlicePlatform.printError('Failed to load Assets', error as Error);
 		}
@@ -125,9 +125,9 @@ export class AliceModel extends CubismUserModel implements Model {
 		}
 	}
 
-	private async setupEyeBlink(): Promise<void> {
+	private setupEyeBlink(): void {
 		if (this.modelSetting_ == null
-		|| this.modelSetting_.getExpressionCount() == 0) { return ;}
+		|| this.modelSetting_.getEyeBlinkParameterCount() == 0) { return ;}
 		this._eyeBlink = CubismEyeBlink.create(this.modelSetting_);
 		const eyeBlinkUpdater = new CubismEyeBlinkUpdater(
 			() => this.motionUpdated_,
