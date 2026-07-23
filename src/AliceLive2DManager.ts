@@ -7,12 +7,12 @@ import type { Live2DManager } from './AliceView';
 import * as AliceDefine from './AliceDefine';
 import { AliceModel } from './AliceModel';
 import { AlicePlatform } from './AlicePlatform';
-import type { GraphicsContext } from './AliceModel';
+import type { DrawingContext } from './AliceModel';
 
 export interface Model {
-	loadAssets(modelPath: string, modelJsonName: string, graphicsContext: GraphicsContext): void;
+	loadAssets(modelPath: string, modelJsonName: string, drawingContext: DrawingContext): void;
 	update(): void;
-	draw(projection: CubismMatrix44, graphicsContext: GraphicsContext): void;
+	draw(projection: CubismMatrix44, drawingContext: DrawingContext): void;
 }
 
 export class AliceLive2DManager implements Live2DManager {
@@ -21,7 +21,7 @@ export class AliceLive2DManager implements Live2DManager {
 		this.model_ = null;
 	}
 
-	public initialize(graphicsContext: GraphicsContext): void {
+	public initialize(drawingContext: DrawingContext): void {
 		const modelName: string = AliceDefine.ModelName;
 		if (AliceDefine.DebugLogEnable) {
 			AlicePlatform.printMessage(`[APP]model name: '${modelName}'`);
@@ -31,7 +31,7 @@ export class AliceLive2DManager implements Live2DManager {
 		modelJsonName += '.model3.json';
 
 		const modelInstance = new AliceModel();
-		modelInstance.loadAssets(modelPath, modelJsonName, graphicsContext);
+		modelInstance.loadAssets(modelPath, modelJsonName, drawingContext);
 		this.model_ = modelInstance;
 	}
 
@@ -43,16 +43,16 @@ export class AliceLive2DManager implements Live2DManager {
 		}
 	}
 
-	public onUpdate(graphicsContext: GraphicsContext): void {
+	public onUpdate(drawingContext: DrawingContext): void {
 		if (this.model_ == null) {
 			return ;
 		}
-		const gl = graphicsContext.getGLManager().getGL();
+		const gl = drawingContext.getGLManager().getGL();
 		CubismWebGLOffscreenManager.getInstance().beginFrameProcess(gl);
 		{
-			const projection: CubismMatrix44 = this.setupProjection(graphicsContext.getCanvas());
+			const projection: CubismMatrix44 = this.setupProjection(drawingContext.getCanvas());
 			this.model_.update();
-			this.model_.draw(projection, graphicsContext);
+			this.model_.draw(projection, drawingContext);
 		}
 		// モデルで使用するオフスクリーン管理の終了処理
 		CubismWebGLOffscreenManager.getInstance().endFrameProcess(gl);

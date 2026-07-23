@@ -68,6 +68,13 @@ export class AliceModel extends CubismUserModel implements Model {
 		this.getRenderer().drawModel(AliceDefine.ShaderPath);
 	}
 
+	public async startLipSyncSound(soundFileName: string): Promise<void> {
+		const path = this.modelHomeDir_ + soundFileName;
+		await this.wavParameterProvider_.start(path);
+		const audio = new Audio(path);
+		audio.play().catch(() => {});
+	}
+
 	public async loadAssets(dir: string, modelJsonFileName: string, drawingContext: DrawingContext): Promise<void> {
 		this.modelHomeDir_ = dir;
 		const url = `${this.modelHomeDir_}${modelJsonFileName}`;
