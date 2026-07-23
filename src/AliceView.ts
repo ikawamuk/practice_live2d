@@ -33,7 +33,7 @@ export interface TextureLoader {
 	createTextureFromPngFile(
 		fileName: string,
 		// usePremultiply: boolean,
-		callback: (textureInfo: TextureInfo) => void): void;
+	): Promise<TextureInfo>;
 }
 
 export interface ShaderCreater {
@@ -90,9 +90,8 @@ export class AliceView {
 			this.background_.setGLManager(glManager_);
 		}
 		textureLoader.createTextureFromPngFile(
-			resourcesPath + imageName,
-			initBackGroundTexture
-		);
+			resourcesPath + imageName
+		).then(initBackGroundTexture);
 		if (this.shader == null) {
 			this.shader = shaderCreater.createShader();
 		}

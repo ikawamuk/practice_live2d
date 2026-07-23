@@ -11,81 +11,87 @@ export class AliceTextureManager implements TextureLoader {
 		this.glManager_ = glManager_;
 	}
 
-	public createTextureFromPngFile(
-		fileName: string,
-		callback: (textureInfo: TextureInfo) => void)
-		: void {
-		// すでにロード済みのものを探す
-		for (let i = 0; i < this.textures_.length; i++) {
-			if (this.textures_[i].fileName == fileName) {
-				const img = new Image();
-				this.textures_[i].img = img
-				img.addEventListener(
-					'load',
-					(): void => callback(this.textures_[i]),
-					{ passive: true }
-				);
-				img.src = fileName;
-				return;
-			}
-		}
-		// データのオンロードをトリガーにする
-		const img = new Image();
-		img.addEventListener (
-			'load',
-			(): void => {
-				if (this.glManager_ == null) {
-					throw new Error('GLManager in not set');
+	public createTextureFromPngFile(fileName: string): Promise<TextureInfo> {
+		return new Promise<TextureInfo>((resolve, reject) => {
+			// すでにロード済みのものを探す
+			for (let i = 0; i < this.textures_.length; i++) {
+				if (this.textures_[i].fileName == fileName) {
+					const img = new Image();
+					this.textures_[i].img = img
+					img.addEventListener(
+						'load',
+						(): void => resolve(this.textures_[i]),
+						{ passive: true }
+					);
+					img.addEventListener(
+						'error',
+						(): void => reject(new Error(`failed to load texture ${fileName}`)),
+						{ passive: true }
+					);
+					img.src = fileName;
+					return;
 				}
-				const gl = this.glManager_.getGL();
-				const texture: WebGLTexture = gl.createTexture();
-				// テクスチャを選択
-				gl.bindTexture(gl.TEXTURE_2D, texture);
-				// テクスチャにピクセルを書き込む
-				gl.texParameteri(
-					gl.TEXTURE_2D,
-					gl.TEXTURE_MIN_FILTER,
-					gl.LINEAR_MIPMAP_LINEAR
-				);
-				gl.texParameteri(
-					gl.TEXTURE_2D,
-					gl.TEXTURE_MAG_FILTER,
-					gl.LINEAR
-				);
-				//// Premult処理を行わせる
-				//if (usePremultiply) {
-				//	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
-				//}
-				// テクスチャにピクセルを書き込む
-				gl.texImage2D(
-					gl.TEXTURE_2D,
-					0,
-					gl.RGBA,
-					gl.RGBA,
-					gl.UNSIGNED_BYTE,
-					img
-				);
-				// ミップマップを生成
-				gl.generateMipmap(gl.TEXTURE_2D);
-				// テクスチャをバインド
-				gl.bindTexture(gl.TEXTURE_2D, null);
-				const textureInfo: TextureInfo = new TextureInfo();
-				if (textureInfo != null) {
+			}
+			// データのオンロードをトリガーにする
+			const img = new Image();
+			img.addEventListener (
+				'load',
+				(): void => {
+					if (this.glManager_ == null) {
+						reject(new Error('GLManager is not set'));
+						return ;
+					}
+					const gl = this.glManager_.getGL();
+					const texture: WebGLTexture = gl.createTexture();
+					// テクスチャを選択
+					gl.bindTexture(gl.TEXTURE_2D, texture);
+					// テクスチャにピクセルを書き込む
+					gl.texParameteri(
+						gl.TEXTURE_2D,
+						gl.TEXTURE_MIN_FILTER,
+						gl.LINEAR_MIPMAP_LINEAR
+					);
+					gl.texParameteri(
+						gl.TEXTURE_2D,
+						gl.TEXTURE_MAG_FILTER,
+						gl.LINEAR
+					);
+					//// Premult処理を行わせる
+					//if (usePremultiply) {
+					//	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
+					//}
+					// テクスチャにピクセルを書き込む
+					gl.texImage2D(
+						gl.TEXTURE_2D,
+						0,
+						gl.RGBA,
+						gl.RGBA,
+						gl.UNSIGNED_BYTE,
+						img
+					);
+					// ミップマップを生成
+					gl.generateMipmap(gl.TEXTURE_2D);
+					// テクスチャをバインド
+					gl.bindTexture(gl.TEXTURE_2D, null);
+					const textureInfo: TextureInfo = new TextureInfo();
 					textureInfo.fileName = fileName;
 					textureInfo.width = img.width;
 					textureInfo.height = img.height;
 					textureInfo.id = texture;
 					textureInfo.img = img;
 					//textureInfo.usePremultply = usePremultiply;
-					if (this.textures_ != null) {
-						this.textures_.push(textureInfo);
-					}
-				}
-				callback(textureInfo);
-			},
-			{ passive: true }
-		);
-		img.src = fileName;
+					this.textures_.push(textureInfo);
+					resolve(textureInfo);
+				},
+				{ passive: true }
+			);
+			img.addEventListener(
+				'error',
+				(): void => reject(new Error(`failed to load texture ${fileName}`)),
+				{ passive: true }
+			);
+			img.src = fileName;
+		});
 	}
 
 	public release(): void {

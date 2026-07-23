@@ -32,6 +32,15 @@ export const BackImageName = 'Gemini_Generated_Image_Cyber.png';
 // ディレクトリ名とmodel3.jsonの名前を一致させておくこと
 export const ModelName = 'Aria';
 
+// アイドリング
+export const MotionGroupIdle = 'Idle';
+
+// モーションの優先度定数
+export const PriorityNone = 0;
+export const PriorityIdle = 1;
+export const PriorityNormal = 2;
+export const PriorityForce = 3;
+
 // デバッグ用ログの表示オプション
 export const DebugLogEnable = true;
 
